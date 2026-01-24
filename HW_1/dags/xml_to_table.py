@@ -1,3 +1,4 @@
+import requests
 from airflow.sdk import DAG
 from datetime import datetime, timedelta
 import json
@@ -9,10 +10,10 @@ from airflow.providers.standard.operators.python import PythonOperator
 
 
 def xml_to_table():
-    file_path = "/opt/airflow/data/nutrition.xml"
+    url = "https://gist.githubusercontent.com/pamelafox/3000322/raw/nutrition.xml"
+    response = requests.get(url)
 
-    tree = ET.parse(file_path)
-    root = tree.getroot()
+    root = ET.fromstring(response.content)
 
     food_rows = []
     for i, food in enumerate(root.findall('food')):
@@ -67,7 +68,12 @@ def xml_to_table():
             mineral_fe FLOAT
         );
         """
+    truncate_foods_table_sql = """
+    TRUNCATE TABLE foods;
+    """
     pg_hook = PostgresHook(postgres_conn_id="postgres")
+
+    pg_hook.run(truncate_foods_table_sql)
 
     pg_hook.run(create_foods_table_sql)
 

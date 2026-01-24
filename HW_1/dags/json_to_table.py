@@ -1,17 +1,15 @@
 from airflow.sdk import DAG
-from datetime import datetime, timedelta
-import json
-import os
+from datetime import datetime
+import requests
 
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.standard.operators.python import PythonOperator
 
 
 def json_to_table():
-    file_path = "/opt/airflow/data/pets-data.json"
-
-    with open(file_path, "r") as f:
-        data = json.load(f)
+    url = "https://raw.githubusercontent.com/LearnWebCode/json-example/master/pets-data.json"
+    response = requests.get(url)
+    data = response.json()
 
     pets = data['pets']
 
@@ -48,6 +46,10 @@ def json_to_table():
             FOREIGN KEY (pet_id) REFERENCES pets(pet_id) ON DELETE CASCADE
         );
         """
+    truncate_tables_sql = """
+        TRUNCATE TABLE pets, fav_foods;
+    """
+    pg_hook.run(truncate_tables_sql)
 
     pg_hook.run(create_pets_table_sql)
     pg_hook.run(create_foods_table_sql)
