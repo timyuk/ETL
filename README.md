@@ -22,7 +22,7 @@
 
 ### Шаг 0: Запустить docker compose в final
 ```bash
-docker compose up
+docker compose up -d
 ```
 
 ### Шаг 1: Создать окружение
